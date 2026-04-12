@@ -162,17 +162,27 @@ impl Prompt for ForgePrompt {
         // Model with nerd font symbol
         if let Some(model) = self.model.as_ref() {
             let model_str = model.to_string();
-            let short_model = model_str.split('/').next_back().unwrap_or(model.as_str());
-            let model_label = format!("{MODEL_SYMBOL} {short_model}");
-            let color = if active {
-                Color::LightMagenta
-            } else {
-                Color::DarkGray
-            };
-            write!(result, " {}", Style::new().fg(color).paint(&model_label)).unwrap();
+            let formatted_model = model_str
+                .split('/')
+                .next_back()
+                .unwrap_or_else(|| model.as_str());
+            write!(result, "/{formatted_model}").unwrap();
         }
 
-        Cow::Owned(result)
+        if let Some(usage) = self.usage.as_ref().map(|usage| &usage.total_tokens) {
+            write!(result, "/{}", usage.compact()).unwrap();
+        }
+
+        write!(result, "]").unwrap();
+
+        // Apply styling once at the end
+        Cow::Owned(
+            Style::new()
+                .bold()
+                .fg(Color::DarkGray)
+                .paint(&result)
+                .to_string(),
+        )
     }
 
     fn render_prompt_indicator(&self, _prompt_mode: reedline::PromptEditMode) -> Cow<'_, str> {
