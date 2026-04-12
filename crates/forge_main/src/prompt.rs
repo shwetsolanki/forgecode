@@ -85,8 +85,11 @@ impl Prompt for ForgePrompt {
             write!(result, "/{formatted_model}").unwrap();
         }
 
-        if let Some(usage) = self.usage.as_ref().map(|usage| &usage.total_tokens) {
-            write!(result, "/{usage}").unwrap();
+        if let Some(usage) = self.usage.as_ref() {
+            write!(result, "/{}", usage.total_tokens).unwrap();
+            if let Some(cost) = usage.cost {
+                write!(result, "/${cost:.4}").unwrap();
+            }
         }
 
         write!(result, "]").unwrap();
@@ -309,5 +312,24 @@ mod tests {
         assert!(!actual.contains("anthropic/claude-3")); // Should not contain the full model ID
         assert!(actual.contains(&VERSION.to_string()));
         assert!(actual.contains("30"));
+    }
+
+    #[test]
+    fn test_render_prompt_right_with_cost() {
+        let usage = Usage {
+            prompt_tokens: forge_api::TokenCount::Actual(100),
+            completion_tokens: forge_api::TokenCount::Actual(50),
+            total_tokens: forge_api::TokenCount::Actual(150),
+            cost: Some(0.0123),
+            ..Default::default()
+        };
+        let mut prompt = ForgePrompt::default();
+        let _ = prompt.usage(usage);
+        let _ = prompt.model(ModelId::new("claude-3"));
+
+        let actual = prompt.render_prompt_right();
+        assert!(actual.contains("150"));
+        assert!(actual.contains("$0.0123"));
+        assert!(actual.contains("claude-3"));
     }
 }
