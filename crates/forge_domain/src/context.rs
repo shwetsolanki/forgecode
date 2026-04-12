@@ -775,6 +775,34 @@ impl Default for TokenCount {
 }
 
 impl TokenCount {
+    /// Returns a human-readable compact representation (e.g. "1.2K", "3.5M").
+    pub fn compact(&self) -> String {
+        let (count, prefix) = match self {
+            TokenCount::Actual(c) => (*c, ""),
+            TokenCount::Approx(c) => (*c, "~"),
+        };
+        let formatted = if count >= 1_000_000 {
+            let val = count as f64 / 1_000_000.0;
+            let rounded = (val * 10.0).round() / 10.0;
+            if (rounded - rounded.floor()).abs() < f64::EPSILON {
+                format!("{:.0}M", rounded)
+            } else {
+                format!("{:.1}M", rounded)
+            }
+        } else if count >= 1_000 {
+            let val = count as f64 / 1_000.0;
+            let rounded = (val * 10.0).round() / 10.0;
+            if (rounded - rounded.floor()).abs() < f64::EPSILON {
+                format!("{:.0}K", rounded)
+            } else {
+                format!("{:.1}K", rounded)
+            }
+        } else {
+            format!("{count}")
+        };
+        format!("{prefix}{formatted}")
+    }
+
     /// Returns the larger of two TokenCount values by their inner count.
     /// If both are `Actual`, the result is `Actual`. If either is `Approx`,
     /// the result is `Approx`.
@@ -1712,5 +1740,22 @@ mod tests {
         // No duplicate null-signature entry should have been appended.
         let expected = fixture_details;
         assert_eq!(stored, &expected);
+    }
+
+    #[test]
+    fn test_token_count_compact() {
+        assert_eq!(TokenCount::Actual(0).compact(), "0");
+        assert_eq!(TokenCount::Actual(500).compact(), "500");
+        assert_eq!(TokenCount::Actual(999).compact(), "999");
+        assert_eq!(TokenCount::Actual(1000).compact(), "1K");
+        assert_eq!(TokenCount::Actual(1500).compact(), "1.5K");
+        assert_eq!(TokenCount::Actual(11000).compact(), "11K");
+        assert_eq!(TokenCount::Actual(11400).compact(), "11.4K");
+        assert_eq!(TokenCount::Actual(999_999).compact(), "1000K");
+        assert_eq!(TokenCount::Actual(1_000_000).compact(), "1M");
+        assert_eq!(TokenCount::Actual(1_500_000).compact(), "1.5M");
+        assert_eq!(TokenCount::Actual(10_000_000).compact(), "10M");
+        assert_eq!(TokenCount::Approx(1500).compact(), "~1.5K");
+        assert_eq!(TokenCount::Approx(2_000_000).compact(), "~2M");
     }
 }
