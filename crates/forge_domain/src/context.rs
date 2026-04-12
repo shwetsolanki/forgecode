@@ -748,35 +748,6 @@ pub enum TokenCount {
 
 impl Display for TokenCount {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TokenCount::Actual(count) => write!(f, "{count}"),
-            TokenCount::Approx(count) => write!(f, "~{count}"),
-        }
-    }
-}
-
-impl std::ops::Add for TokenCount {
-    type Output = Self;
-
-    fn add(self, other: Self) -> Self::Output {
-        match (self, other) {
-            (TokenCount::Actual(a), TokenCount::Actual(b)) => TokenCount::Actual(a + b),
-            (TokenCount::Approx(a), TokenCount::Approx(b)) => TokenCount::Approx(a + b),
-            (TokenCount::Actual(a), TokenCount::Approx(b)) => TokenCount::Approx(a + b),
-            (TokenCount::Approx(a), TokenCount::Actual(b)) => TokenCount::Approx(a + b),
-        }
-    }
-}
-
-impl Default for TokenCount {
-    fn default() -> Self {
-        TokenCount::Actual(0)
-    }
-}
-
-impl TokenCount {
-    /// Returns a human-readable compact representation (e.g. "1.2K", "3.5M").
-    pub fn compact(&self) -> String {
         let (count, prefix) = match self {
             TokenCount::Actual(c) => (*c, ""),
             TokenCount::Approx(c) => (*c, "~"),
@@ -800,9 +771,30 @@ impl TokenCount {
         } else {
             format!("{count}")
         };
-        format!("{prefix}{formatted}")
+        write!(f, "{prefix}{formatted}")
     }
+}
 
+impl std::ops::Add for TokenCount {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self::Output {
+        match (self, other) {
+            (TokenCount::Actual(a), TokenCount::Actual(b)) => TokenCount::Actual(a + b),
+            (TokenCount::Approx(a), TokenCount::Approx(b)) => TokenCount::Approx(a + b),
+            (TokenCount::Actual(a), TokenCount::Approx(b)) => TokenCount::Approx(a + b),
+            (TokenCount::Approx(a), TokenCount::Actual(b)) => TokenCount::Approx(a + b),
+        }
+    }
+}
+
+impl Default for TokenCount {
+    fn default() -> Self {
+        TokenCount::Actual(0)
+    }
+}
+
+impl TokenCount {
     /// Returns the larger of two TokenCount values by their inner count.
     /// If both are `Actual`, the result is `Actual`. If either is `Approx`,
     /// the result is `Approx`.
@@ -1743,19 +1735,19 @@ mod tests {
     }
 
     #[test]
-    fn test_token_count_compact() {
-        assert_eq!(TokenCount::Actual(0).compact(), "0");
-        assert_eq!(TokenCount::Actual(500).compact(), "500");
-        assert_eq!(TokenCount::Actual(999).compact(), "999");
-        assert_eq!(TokenCount::Actual(1000).compact(), "1K");
-        assert_eq!(TokenCount::Actual(1500).compact(), "1.5K");
-        assert_eq!(TokenCount::Actual(11000).compact(), "11K");
-        assert_eq!(TokenCount::Actual(11400).compact(), "11.4K");
-        assert_eq!(TokenCount::Actual(999_999).compact(), "1000K");
-        assert_eq!(TokenCount::Actual(1_000_000).compact(), "1M");
-        assert_eq!(TokenCount::Actual(1_500_000).compact(), "1.5M");
-        assert_eq!(TokenCount::Actual(10_000_000).compact(), "10M");
-        assert_eq!(TokenCount::Approx(1500).compact(), "~1.5K");
-        assert_eq!(TokenCount::Approx(2_000_000).compact(), "~2M");
+    fn test_token_count_display() {
+        assert_eq!(TokenCount::Actual(0).to_string(), "0");
+        assert_eq!(TokenCount::Actual(500).to_string(), "500");
+        assert_eq!(TokenCount::Actual(999).to_string(), "999");
+        assert_eq!(TokenCount::Actual(1000).to_string(), "1K");
+        assert_eq!(TokenCount::Actual(1500).to_string(), "1.5K");
+        assert_eq!(TokenCount::Actual(11000).to_string(), "11K");
+        assert_eq!(TokenCount::Actual(11400).to_string(), "11.4K");
+        assert_eq!(TokenCount::Actual(999_999).to_string(), "1000K");
+        assert_eq!(TokenCount::Actual(1_000_000).to_string(), "1M");
+        assert_eq!(TokenCount::Actual(1_500_000).to_string(), "1.5M");
+        assert_eq!(TokenCount::Actual(10_000_000).to_string(), "10M");
+        assert_eq!(TokenCount::Approx(1500).to_string(), "~1.5K");
+        assert_eq!(TokenCount::Approx(2_000_000).to_string(), "~2M");
     }
 }

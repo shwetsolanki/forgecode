@@ -86,7 +86,7 @@ impl Prompt for ForgePrompt {
         }
 
         if let Some(usage) = self.usage.as_ref().map(|usage| &usage.total_tokens) {
-            write!(result, "/{}", usage.compact()).unwrap();
+            write!(result, "/{usage}").unwrap();
         }
 
         write!(result, "]").unwrap();
