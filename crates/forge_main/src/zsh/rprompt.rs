@@ -150,7 +150,7 @@ mod tests {
             .token_count(Some(TokenCount::Actual(1500)))
             .to_string();
 
-        let expected = " %B%F{15}\u{f167a} FORGE%f%b %B%F{15}1.5k%f%b %F{134}\u{ec19} gpt-4%f";
+        let expected = " %B%F{15}\u{f167a} FORGE%f%b %B%F{15}1.5K%f%b %F{134}\u{ec19} gpt-4%f";
         assert_eq!(actual, expected);
     }
 
@@ -165,7 +165,7 @@ mod tests {
             .currency_symbol("\u{f155}")
             .to_string();
 
-        let expected = " %B%F{15}\u{f167a} FORGE%f%b %B%F{15}1.5k%f%b %B%F{2}\u{f155}0.01%f%b %F{134}\u{ec19} gpt-4%f";
+        let expected = " %B%F{15}\u{f167a} FORGE%f%b %B%F{15}1.5K%f%b %B%F{2}\u{f155}0.01%f%b %F{134}\u{ec19} gpt-4%f";
         assert_eq!(actual, expected);
     }
 
@@ -179,7 +179,7 @@ mod tests {
             .use_nerd_font(false)
             .to_string();
 
-        let expected = " %B%F{15}FORGE%f%b %B%F{15}1.5k%f%b %F{134}gpt-4%f";
+        let expected = " %B%F{15}FORGE%f%b %B%F{15}1.5K%f%b %F{134}gpt-4%f";
         assert_eq!(actual, expected);
     }
 
@@ -195,7 +195,7 @@ mod tests {
             .conversion_ratio(83.5)
             .to_string();
 
-        let expected = " %B%F{15}\u{f167a} FORGE%f%b %B%F{15}1.5k%f%b %B%F{2}INR0.83%f%b %F{134}\u{ec19} gpt-4%f";
+        let expected = " %B%F{15}\u{f167a} FORGE%f%b %B%F{15}1.5K%f%b %B%F{2}INR0.83%f%b %F{134}\u{ec19} gpt-4%f";
         assert_eq!(actual, expected);
     }
     #[test]
@@ -210,7 +210,7 @@ mod tests {
             .conversion_ratio(0.92)
             .to_string();
 
-        let expected = " %B%F{15}\u{f167a} FORGE%f%b %B%F{15}1.5k%f%b %B%F{2}€0.01%f%b %F{134}\u{ec19} gpt-4%f";
+        let expected = " %B%F{15}\u{f167a} FORGE%f%b %B%F{15}1.5K%f%b %B%F{2}€0.01%f%b %F{134}\u{ec19} gpt-4%f";
         assert_eq!(actual, expected);
     }
 }
