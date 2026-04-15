@@ -14,6 +14,29 @@ fn is_false(value: &bool) -> bool {
     !value
 }
 
+/// Humanizes a number to a readable format with B/M/K suffixes.
+///
+/// # Arguments
+/// * `n` - The number to humanize
+pub fn humanize_number(n: usize) -> String {
+    let (divisor, suffix) = if n >= 1_000_000_000 {
+        (1_000_000_000usize, "B")
+    } else if n >= 1_000_000 {
+        (1_000_000usize, "M")
+    } else if n >= 1_000 {
+        (1_000usize, "K")
+    } else {
+        return n.to_string();
+    };
+    let whole = n / divisor;
+    let decimal = (n % divisor) / (divisor / 10);
+    if decimal == 0 {
+        format!("{whole}{suffix}")
+    } else {
+        format!("{whole}.{decimal}{suffix}")
+    }
+}
+
 use crate::temperature::Temperature;
 use crate::top_k::TopK;
 use crate::top_p::TopP;
@@ -748,10 +771,11 @@ pub enum TokenCount {
 
 impl Display for TokenCount {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TokenCount::Actual(count) => write!(f, "{count}"),
-            TokenCount::Approx(count) => write!(f, "~{count}"),
-        }
+        let (count, prefix) = match self {
+            TokenCount::Actual(c) => (*c, ""),
+            TokenCount::Approx(c) => (*c, "~"),
+        };
+        write!(f, "{prefix}{}", humanize_number(count))
     }
 }
 
@@ -1712,5 +1736,57 @@ mod tests {
         // No duplicate null-signature entry should have been appended.
         let expected = fixture_details;
         assert_eq!(stored, &expected);
+    }
+
+    #[test]
+    fn test_token_count_display() {
+        assert_eq!(TokenCount::Actual(0).to_string(), "0");
+        assert_eq!(TokenCount::Actual(500).to_string(), "500");
+        assert_eq!(TokenCount::Actual(999).to_string(), "999");
+        assert_eq!(TokenCount::Actual(1000).to_string(), "1K");
+        assert_eq!(TokenCount::Actual(1500).to_string(), "1.5K");
+        assert_eq!(TokenCount::Actual(11000).to_string(), "11K");
+        assert_eq!(TokenCount::Actual(11400).to_string(), "11.4K");
+        assert_eq!(TokenCount::Actual(999_999).to_string(), "999.9K");
+        assert_eq!(TokenCount::Actual(1_000_000).to_string(), "1M");
+        assert_eq!(TokenCount::Actual(1_500_000).to_string(), "1.5M");
+        assert_eq!(TokenCount::Actual(10_000_000).to_string(), "10M");
+        assert_eq!(TokenCount::Approx(1500).to_string(), "~1.5K");
+        assert_eq!(TokenCount::Approx(2_000_000).to_string(), "~2M");
+    }
+
+    #[test]
+    fn test_humanize_number_billions() {
+        let actual = humanize_number(1_500_000_000);
+        let expected = "1.5B";
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_humanize_number_millions() {
+        let actual = humanize_number(2_300_000);
+        let expected = "2.3M";
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_humanize_number_thousands() {
+        let actual = humanize_number(4_500);
+        let expected = "4.5K";
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_humanize_number_small() {
+        let actual = humanize_number(999);
+        let expected = "999";
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_humanize_number_zero() {
+        let actual = humanize_number(0);
+        let expected = "0";
+        assert_eq!(actual, expected);
     }
 }
